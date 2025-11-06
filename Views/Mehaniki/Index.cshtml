@@ -1,0 +1,40 @@
+@model IEnumerable<AutoServis.Models.Mehanik>
+
+@{
+    ViewData["Title"] = "Mehaniki";
+}
+
+<h1>Mehaniki</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Dodaj mehanika</a>
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Ime in priimek</th>
+            <th>Specializacija</th>
+            <th>Telefon</th>
+            <th>Email</th>
+            <th>Datum zaposlitve</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var item in Model) {
+        <tr>
+            <td>@item.Ime @item.Priimek</td>
+            <td>@item.Specializacija</td>
+            <td>@item.Telefon</td>
+            <td>@item.Email</td>
+            <td>@item.DatumZaposlitve.ToString("dd.MM.yyyy")</td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.MehanikID" class="btn btn-sm btn-warning">Uredi</a>
+                <a asp-action="Details" asp-route-id="@item.MehanikID" class="btn btn-sm btn-info">Podrobnosti</a>
+                <a asp-action="Delete" asp-route-id="@item.MehanikID" class="btn btn-sm btn-danger">Izbriši</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
