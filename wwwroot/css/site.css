@@ -20,3 +20,12 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+.card-body {
+  flex: 1 1 auto;
+  padding: 1rem 1rem;
+  min-height: 170px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
