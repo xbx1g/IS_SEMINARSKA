@@ -1,4 +1,9 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using AutoServis.Data;
 using AutoServis.Models;
@@ -7,22 +12,23 @@ using Microsoft.AspNetCore.Authorization;
 namespace AutoServis.Controllers
 {
     [Authorize]
-    public class MehanikiController : Controller
+    public class StrankeController : Controller
     {
         private readonly AutoServisContext _context;
 
-        public MehanikiController(AutoServisContext context)
+        public StrankeController(AutoServisContext context)
         {
             _context = context;
         }
 
-        // GET: Mehaniki
+        // GET: Stranke
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Mehaniki.ToListAsync());
+            return View(await _context.Stranke.ToListAsync());
         }
 
-        // GET: Mehaniki/Details/5
+        // GET: Stranke/Details/5
+        [Authorize(Roles = "Administrator, Manager, Staff")]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -30,37 +36,37 @@ namespace AutoServis.Controllers
                 return NotFound();
             }
 
-            var mehanik = await _context.Mehaniki
-                .FirstOrDefaultAsync(m => m.MehanikID == id);
-            if (mehanik == null)
+            var stranka = await _context.Stranke
+                .FirstOrDefaultAsync(m => m.ID == id);
+            if (stranka == null)
             {
                 return NotFound();
             }
 
-            return View(mehanik);
+            return View(stranka);
         }
 
-        // GET: Mehaniki/Create
+        // GET: Stranke/Create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Mehaniki/Create
+        // POST: Stranke/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("MehanikID,Ime,Priimek,Specializacija,Telefon,Email")] Mehanik mehanik)
+        public async Task<IActionResult> Create([Bind("ID,Priimek,Ime,Telefon,Email,DatumRegistracije")] Stranka stranka)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(mehanik);
+                _context.Add(stranka);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(mehanik);
+            return View(stranka);
         }
 
-        // GET: Mehaniki/Edit/5
+        // GET: Stranke/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -68,20 +74,21 @@ namespace AutoServis.Controllers
                 return NotFound();
             }
 
-            var mehanik = await _context.Mehaniki.FindAsync(id);
-            if (mehanik == null)
+            var stranka = await _context.Stranke.FindAsync(id);
+            if (stranka == null)
             {
                 return NotFound();
             }
-            return View(mehanik);
+            return View(stranka);
         }
 
-        // POST: Mehaniki/Edit/5
+        // POST: Stranke/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("MehanikID,Ime,Priimek,Specializacija,Telefon,Email,DatumZaposlitve")] Mehanik mehanik)
+        [Authorize(Roles = "Administrator")]
+        public async Task<IActionResult> Edit(int id, [Bind("ID,Priimek,Ime,Telefon,Email,DatumRegistracije")] Stranka stranka)
         {
-            if (id != mehanik.MehanikID)
+            if (id != stranka.ID)
             {
                 return NotFound();
             }
@@ -90,12 +97,12 @@ namespace AutoServis.Controllers
             {
                 try
                 {
-                    _context.Update(mehanik);
+                    _context.Update(stranka);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!MehanikExists(mehanik.MehanikID))
+                    if (!StrankaExists(stranka.ID))
                     {
                         return NotFound();
                     }
@@ -106,10 +113,11 @@ namespace AutoServis.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(mehanik);
+            return View(stranka);
         }
 
-        // GET: Mehaniki/Delete/5
+        // GET: Stranke/Delete/5
+        [Authorize(Roles = "Staff")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -117,33 +125,34 @@ namespace AutoServis.Controllers
                 return NotFound();
             }
 
-            var mehanik = await _context.Mehaniki
-                .FirstOrDefaultAsync(m => m.MehanikID == id);
-            if (mehanik == null)
+            var stranka = await _context.Stranke
+                .FirstOrDefaultAsync(m => m.ID == id);
+            if (stranka == null)
             {
                 return NotFound();
             }
 
-            return View(mehanik);
+            return View(stranka);
         }
 
-        // POST: Mehaniki/Delete/5
+        // POST: Stranke/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var mehanik = await _context.Mehaniki.FindAsync(id);
-            if (mehanik != null)
+            var stranka = await _context.Stranke.FindAsync(id);
+            if (stranka != null)
             {
-                _context.Mehaniki.Remove(mehanik);
+                _context.Stranke.Remove(stranka);
             }
+
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool MehanikExists(int id)
+        private bool StrankaExists(int id)
         {
-            return _context.Mehaniki.Any(e => e.MehanikID == id);
+            return _context.Stranke.Any(e => e.ID == id);
         }
     }
 }

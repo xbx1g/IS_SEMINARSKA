@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace AutoServis.Models;
 public class Stranka
@@ -9,8 +10,11 @@ public class Stranka
     public string? Ime { get; set; }
     public string? Telefon { get; set; }
     public string? Email { get; set; }
-    public string? Naslov { get; set; }  // DODANO
+    public string? Naslov { get; set; }
+
+    [Display(Name = "Datum Registracije")]
     public DateTime DatumRegistracije { get; set; }
 
+    
     public ICollection<Rezervacija>? Rezervacije { get; set; }
 }

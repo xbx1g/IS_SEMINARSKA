@@ -12,10 +12,74 @@ public static class DbInitializer
     public static void Initialize(AutoServisContext context)
     {
         context.Database.EnsureCreated();
+        
+        // Dodajanje novih vlog
+        var roles = new IdentityRole[] {
+            new IdentityRole{Id="1", Name="Administrator"},
+            new IdentityRole{Id="2", Name="Manager"},
+            new IdentityRole{Id="3", Name="Staff"},
+            new IdentityRole{Id="4", Name="Stranka"},
+            new IdentityRole{Id="5", Name="Mehanik"}
+        };
+        
+        foreach (IdentityRole r in roles)
+        {
+            if (!context.Roles.Any(role => role.Name == r.Name))
+            {
+                context.Roles.Add(r);
+            }
+        }
+        context.SaveChanges();
+
+        // Ustvarjanje admin uporabnika
+        var user = new ApplicationUser
+        {
+            FirstName = "Robert",
+            LastName = "Avtomehanik",
+            City = "Ljubljana",
+            Email = "servis@avtoservis.si",
+            NormalizedEmail = "SERVIS@AVTOSERVIS.SI",
+            UserName = "servis@avtoservis.si",
+            NormalizedUserName = "servis@avtoservis.si",
+            PhoneNumber = "+386-1-123-4567",
+            EmailConfirmed = true,
+            PhoneNumberConfirmed = true,
+            SecurityStamp = Guid.NewGuid().ToString("D"),
+            Vloga = "Administrator" // Dodano novo polje
+        };
+        
+        if (!context.Users.Any(u => u.UserName == user.UserName))
+        {
+            var password = new PasswordHasher<ApplicationUser>();
+            var hashed = password.HashPassword(user,"Testni123!");
+            user.PasswordHash = hashed;
+            context.Users.Add(user);
+            context.SaveChanges();
+            
+            // Dodelitev vlog admin uporabniku
+            var UserRoles = new IdentityUserRole<string>[]
+            {
+                new IdentityUserRole<string>{RoleId = roles[0].Id, UserId=user.Id}, // Administrator
+                new IdentityUserRole<string>{RoleId = roles[1].Id, UserId=user.Id}, // Manager
+            };
+            
+            foreach (IdentityUserRole<string> r in UserRoles)
+            {
+                if (!context.UserRoles.Any(ur => ur.UserId == user.Id && ur.RoleId == r.RoleId))
+                {
+                    context.UserRoles.Add(r);
+                }
+            }
+            context.SaveChanges();
+        }
+
+        // Preveri, če že obstajajo testni podatki
         if (context.Stranke.Any())
         {
             return;
         }
+
+        // Dodajanje testnih podatkov
         var stranke = new Stranka[]
         {
             new Stranka{Ime="Janez",Priimek="Novak",Telefon="041-123-456",Email="janez.novak@email.com",DatumRegistracije=DateTime.Parse("2023-01-15")},
@@ -25,6 +89,7 @@ public static class DbInitializer
         };
         context.Stranke.AddRange(stranke);
         context.SaveChanges();
+
         var vozila = new Vozilo[]
         {
             new Vozilo{VoziloID=1001,Znamka="Volkswagen",Model="Golf",Registracija="LJ-AB-123",Letnik=2020},
@@ -54,49 +119,6 @@ public static class DbInitializer
             new Rezervacija{StrankaID=4,VoziloID=1004,MehanikID=2,DatumRezervacije=DateTime.Parse("2024-02-18"),OpisTezave="Popravilo klima naprave",Status=StatusServisa.Cakajoce,Cena=200.00m}
         };
         context.Rezervacije.AddRange(rezervacije);
-        
-        var roles = new IdentityRole[] {
-            new IdentityRole{Id="1", Name="Administrator"},
-            new IdentityRole{Id="2", Name="Manager"},
-            new IdentityRole{Id="3", Name="Staff"}
-        };
-        foreach (IdentityRole r in roles)
-        {
-            context.Roles.Add(r);
-        }
-        var user = new ApplicationUser
-        {
-            FirstName = "Robert",
-            LastName = "Avtomehanik",
-            City = "Ljubljana",
-            Email = "servis@avtoservis.si",
-            NormalizedEmail = "SERVIS@AVTOSERVIS.SI",
-            UserName = "servis@avtoservis.si",
-            NormalizedUserName = "servis@avtoservis.si",
-            PhoneNumber = "+386-1-123-4567",
-            EmailConfirmed = true,
-            PhoneNumberConfirmed = true,
-            SecurityStamp = Guid.NewGuid().ToString("D")
-        };
-        if (!context.Users.Any(u => u.UserName == user.UserName))
-        {
-            var password = new PasswordHasher<ApplicationUser>();
-            var hashed = password.HashPassword(user,"Testni123!");
-            user.PasswordHash = hashed;
-            context.Users.Add(user);
-            
-        }
-        context.SaveChanges();
-        
-        var UserRoles = new IdentityUserRole<string>[]
-        {
-            new IdentityUserRole<string>{RoleId = roles[0].Id, UserId=user.Id},
-            new IdentityUserRole<string>{RoleId = roles[1].Id, UserId=user.Id},
-        };
-        foreach (IdentityUserRole<string> r in UserRoles)
-        {
-            context.UserRoles.Add(r);
-        }
         context.SaveChanges();
     }
 }

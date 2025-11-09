@@ -12,7 +12,7 @@ public class Rezervacija
     public int RezervacijaID { get; set; }
     public int VoziloID { get; set; }
     public int StrankaID { get; set; }
-    public int? MehanikID { get; set; }  // DODANO
+    public int? MehanikID { get; set; } 
     
     public DateTime DatumRezervacije { get; set; }
     public string? OpisTezave { get; set; }
@@ -21,11 +21,11 @@ public class Rezervacija
     public string? Diagnoza { get; set; }
     public string? OpravljenaDela { get; set; }
     public decimal? Cena { get; set; }
-    public bool Potrjeno { get; set; } = false; // Digitalno potrjevanje
+    public bool Potrjeno { get; set; } = false;
     public DateTime? DatumZacetka { get; set; }
     public DateTime? DatumKonca { get; set; }
     
     public Vozilo? Vozilo { get; set; }
     public Stranka? Stranka { get; set; }
-    public Mehanik? Mehanik { get; set; }  // DODANO
+    public Mehanik? Mehanik { get; set; }
 }
