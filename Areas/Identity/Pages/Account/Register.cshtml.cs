@@ -65,10 +65,6 @@ namespace AutoServis.Areas.Identity.Pages.Account
             [Display(Name = "Priimek")]
             public string LastName { get; set; }
 
-            [Required(ErrorMessage = "Mesto je obvezno")]
-            [Display(Name = "Mesto")]
-            public string City { get; set; }
-
             [Required(ErrorMessage = "Email je obvezen")]
             [EmailAddress(ErrorMessage = "Neveljaven email naslov")]
             [Display(Name = "Email")]
@@ -96,120 +92,102 @@ namespace AutoServis.Areas.Identity.Pages.Account
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
         }
 
-public async Task<IActionResult> OnPostAsync(string returnUrl = null)
-{
-    returnUrl ??= Url.Content("~/");
-    ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
-    
-    if (ModelState.IsValid)
-    {
-        var user = CreateUser();
-
-        user.FirstName = Input.FirstName;
-        user.LastName = Input.LastName;
-        user.City = Input.City;
-        user.Vloga = Input.Vloga;
-
-        await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
-        await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
-        
-        var result = await _userManager.CreateAsync(user, Input.Password);
-
-        if (result.Succeeded)
+        public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
-            _logger.LogInformation("Uporabnik je ustvaril nov račun.");
-
-            // Ustvarjanje ustreznega profila glede na vlogo
-            if (Input.Vloga == "Stranka")
+            returnUrl ??= Url.Content("~/");
+            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+            
+            if (ModelState.IsValid)
             {
-                var stranka = new Stranka
+                var user = CreateUser();
+
+                user.FirstName = Input.FirstName;
+                user.LastName = Input.LastName;
+                user.Vloga = Input.Vloga;
+
+                await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+                await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+                
+                var result = await _userManager.CreateAsync(user, Input.Password);
+
+                if (result.Succeeded)
                 {
-                    Ime = Input.FirstName,
-                    Priimek = Input.LastName,
-                    Email = Input.Email,
-                    DatumRegistracije = DateTime.Now
-                };
-                
-                _context.Stranke.Add(stranka);
-                await _context.SaveChangesAsync();
-                
-                user.StrankaID = stranka.ID;
-                await _userManager.UpdateAsync(user);
-                
-                // Preverite, ali vloga obstaja, preden jo dodelite
-                var roleExists = await _userManager.IsInRoleAsync(user, "Stranka");
-                if (!roleExists)
-                {
-                    // Poskusite najprej z normaliziranim imenom
-                    var roleResult = await _userManager.AddToRoleAsync(user, "Stranka");
-                    if (!roleResult.Succeeded)
+                    _logger.LogInformation("Uporabnik je ustvaril nov račun.");
+
+                    // Ustvarjanje ustreznega profila glede na vlogo
+                    if (Input.Vloga == "Stranka")
                     {
-                        _logger.LogWarning("Ni bilo mogoče dodeliti vloge Stranka uporabniku.");
+                        var stranka = new Stranka
+                        {
+                            Ime = Input.FirstName,
+                            Priimek = Input.LastName,
+                            Email = Input.Email,
+                            DatumRegistracije = DateTime.Now
+                        };
+                        
+                        _context.Stranke.Add(stranka);
+                        await _context.SaveChangesAsync();
+                        
+                        user.StrankaID = stranka.ID;
+                        await _userManager.UpdateAsync(user);
+                        
+                        // Dodelitev vloge Stranka
+                        await _userManager.AddToRoleAsync(user, "Stranka");
+                    }
+                    else if (Input.Vloga == "Mehanik")
+                    {
+                        var mehanik = new Mehanik
+                        {
+                            Ime = Input.FirstName,
+                            Priimek = Input.LastName,
+                            Email = Input.Email,
+                            DatumZaposlitve = DateTime.Now,
+                            Specializacija = "Mehanik",
+                            Telefon = ""
+                        };
+                        
+                        _context.Mehaniki.Add(mehanik);
+                        await _context.SaveChangesAsync();
+                        
+                        user.MehanikID = mehanik.MehanikID;
+                        await _userManager.UpdateAsync(user);
+                        
+                        // Dodelitev vloge Mehanik
+                        await _userManager.AddToRoleAsync(user, "Mehanik");
+                    }
+
+                    // Email confirmation (opcijsko)
+                    var userId = await _userManager.GetUserIdAsync(user);
+                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+                    var callbackUrl = Url.Page(
+                        "/Account/ConfirmEmail",
+                        pageHandler: null,
+                        values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
+                        protocol: Request.Scheme);
+
+                    await _emailSender.SendEmailAsync(Input.Email, "Potrdite svoj email",
+                        $"Prosimo potrdite svoj račun z <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>klikom tukaj</a>.");
+
+                    if (_userManager.Options.SignIn.RequireConfirmedAccount)
+                    {
+                        return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
+                    }
+                    else
+                    {
+                        await _signInManager.SignInAsync(user, isPersistent: false);
+                        return LocalRedirect(returnUrl);
                     }
                 }
-            }
-            else if (Input.Vloga == "Mehanik")
-            {
-                var mehanik = new Mehanik
+                
+                foreach (var error in result.Errors)
                 {
-                    Ime = Input.FirstName,
-                    Priimek = Input.LastName,
-                    Email = Input.Email,
-                    DatumZaposlitve = DateTime.Now,
-                    Specializacija = "Mehanik",
-                    Telefon = ""
-                };
-                
-                _context.Mehaniki.Add(mehanik);
-                await _context.SaveChangesAsync();
-                
-                user.MehanikID = mehanik.MehanikID;
-                await _userManager.UpdateAsync(user);
-                
-                // Preverite, ali vloga obstaja, preden jo dodelite
-                var roleExists = await _userManager.IsInRoleAsync(user, "Mehanik");
-                if (!roleExists)
-                {
-                    var roleResult = await _userManager.AddToRoleAsync(user, "Mehanik");
-                    if (!roleResult.Succeeded)
-                    {
-                        _logger.LogWarning("Ni bilo mogoče dodeliti vloge Mehanik uporabniku.");
-                    }
+                    ModelState.AddModelError(string.Empty, error.Description);
                 }
             }
 
-            // Email confirmation (opcijsko)
-            var userId = await _userManager.GetUserIdAsync(user);
-            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-            var callbackUrl = Url.Page(
-                "/Account/ConfirmEmail",
-                pageHandler: null,
-                values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
-                protocol: Request.Scheme);
-
-            await _emailSender.SendEmailAsync(Input.Email, "Potrdite svoj email",
-                $"Prosimo potrdite svoj račun z <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>klikom tukaj</a>.");
-
-            if (_userManager.Options.SignIn.RequireConfirmedAccount)
-            {
-                return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
-            }
-            else
-            {
-                await _signInManager.SignInAsync(user, isPersistent: false);
-                return LocalRedirect(returnUrl);
-            }
+            return Page();
         }
-        
-        foreach (var error in result.Errors)
-        {
-            ModelState.AddModelError(string.Empty, error.Description);
-        }
-    }
-
-    return Page();
-}
 
         private ApplicationUser CreateUser()
         {

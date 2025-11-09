@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace AutoServis.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Administrator, Mehanik")]
     public class StrankeController : Controller
     {
         private readonly AutoServisContext _context;
@@ -28,7 +28,6 @@ namespace AutoServis.Controllers
         }
 
         // GET: Stranke/Details/5
-        [Authorize(Roles = "Administrator, Manager, Staff")]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -85,7 +84,6 @@ namespace AutoServis.Controllers
         // POST: Stranke/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Administrator")]
         public async Task<IActionResult> Edit(int id, [Bind("ID,Priimek,Ime,Telefon,Email,DatumRegistracije")] Stranka stranka)
         {
             if (id != stranka.ID)
@@ -117,7 +115,6 @@ namespace AutoServis.Controllers
         }
 
         // GET: Stranke/Delete/5
-        [Authorize(Roles = "Staff")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)

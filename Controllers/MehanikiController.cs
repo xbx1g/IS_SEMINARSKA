@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace AutoServis.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Administrator, Mehanik")]
     public class MehanikiController : Controller
     {
         private readonly AutoServisContext _context;

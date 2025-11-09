@@ -13,13 +13,11 @@ public static class DbInitializer
     {
         context.Database.EnsureCreated();
         
-        // Dodajanje novih vlog
+        // Dodajanje novih vlog (samo Administrator, Stranka, Mehanik)
         var roles = new IdentityRole[] {
-            new IdentityRole{Id="1", Name="Administrator"},
-            new IdentityRole{Id="2", Name="Manager"},
-            new IdentityRole{Id="3", Name="Staff"},
-            new IdentityRole{Id="4", Name="Stranka"},
-            new IdentityRole{Id="5", Name="Mehanik"}
+            new IdentityRole{Id="1", Name="Administrator", NormalizedName="ADMINISTRATOR"},
+            new IdentityRole{Id="2", Name="Stranka", NormalizedName="STRANKA"},
+            new IdentityRole{Id="3", Name="Mehanik", NormalizedName="MEHANIK"}
         };
         
         foreach (IdentityRole r in roles)
@@ -45,7 +43,7 @@ public static class DbInitializer
             EmailConfirmed = true,
             PhoneNumberConfirmed = true,
             SecurityStamp = Guid.NewGuid().ToString("D"),
-            Vloga = "Administrator" // Dodano novo polje
+            Vloga = "Administrator"
         };
         
         if (!context.Users.Any(u => u.UserName == user.UserName))
@@ -56,11 +54,10 @@ public static class DbInitializer
             context.Users.Add(user);
             context.SaveChanges();
             
-            // Dodelitev vlog admin uporabniku
+            // Dodelitev vloge admin uporabniku
             var UserRoles = new IdentityUserRole<string>[]
             {
                 new IdentityUserRole<string>{RoleId = roles[0].Id, UserId=user.Id}, // Administrator
-                new IdentityUserRole<string>{RoleId = roles[1].Id, UserId=user.Id}, // Manager
             };
             
             foreach (IdentityUserRole<string> r in UserRoles)

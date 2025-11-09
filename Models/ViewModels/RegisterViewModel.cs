@@ -4,36 +4,32 @@ namespace AutoServis.Models.ViewModels
 {
     public class RegisterViewModel
     {
-        [Required]
+        [Required(ErrorMessage = "Ime je obvezno")]
         [Display(Name = "Ime")]
-        public string FirstName { get; set; }
+        public required string FirstName { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Priimek je obvezen")]
         [Display(Name = "Priimek")]
-        public string LastName { get; set; }
+        public required string LastName { get; set; }
 
-        [Required]
-        [EmailAddress]
+        [Required(ErrorMessage = "Email je obvezen")]
+        [EmailAddress(ErrorMessage = "Neveljaven email naslov")]
         [Display(Name = "Email")]
-        public string Email { get; set; }
+        public required string Email { get; set; }
 
-        [Required]
-        [Display(Name = "Mesto")]
-        public string City { get; set; }
-
-        [Required]
+        [Required(ErrorMessage = "Izberite vlogo")]
         [Display(Name = "Vloga")]
-        public string Vloga { get; set; }
+        public required string Vloga { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Geslo je obvezno")]
         [StringLength(100, ErrorMessage = "Geslo mora biti dolgo vsaj {2} znakov.", MinimumLength = 6)]
         [DataType(DataType.Password)]
         [Display(Name = "Geslo")]
-        public string Password { get; set; }
+        public required string Password { get; set; }
 
         [DataType(DataType.Password)]
         [Display(Name = "Potrdi geslo")]
         [Compare("Password", ErrorMessage = "Gesli se ne ujemata.")]
-        public string ConfirmPassword { get; set; }
+        public required string ConfirmPassword { get; set; }
     }
 }
